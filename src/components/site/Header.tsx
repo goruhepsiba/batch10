@@ -43,12 +43,12 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container-prose flex h-16 items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--gradient-amber)] text-primary-foreground shadow-soft">
-            <Compass className="h-5 w-5" strokeWidth={1.6} />
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 flex h-16 items-center justify-between gap-2 sm:gap-4">
+        <Link to="/" className="flex items-center gap-2 group">
+          <span className="grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-full bg-[var(--gradient-amber)] text-primary-foreground shadow-soft">
+            <Compass className="h-4.5 w-4.5 sm:h-5 sm:w-5" strokeWidth={1.6} />
           </span>
-          <span className="font-display text-2xl tracking-tight">
+          <span className="font-display text-xl sm:text-2xl tracking-tight">
             Heritage<span className="text-gradient-amber">Verse</span>
           </span>
         </Link>
@@ -69,7 +69,7 @@ export function Header() {
           )}
         </nav>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={toggleTheme}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -82,7 +82,7 @@ export function Header() {
             <>
               <Link
                 to="/favorites"
-                className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-sm hover:bg-accent"
+                className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-sm hover:bg-accent whitespace-nowrap"
                 title="My favorites & trips"
               >
                 <BookMarked className="h-4 w-4 text-amber" />
@@ -90,7 +90,7 @@ export function Header() {
               </Link>
               <button
                 onClick={signOut}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
+                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-3 sm:px-4 text-sm font-medium text-primary-foreground hover:opacity-90 whitespace-nowrap cursor-pointer"
               >
                 <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Sign out</span>
               </button>
@@ -98,7 +98,7 @@ export function Header() {
           ) : (
             <Link
               to="/auth"
-              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-3 sm:px-4 text-sm font-medium text-primary-foreground hover:opacity-90 whitespace-nowrap cursor-pointer"
             >
               <UserIcon className="h-4 w-4" /> Sign in
             </Link>
