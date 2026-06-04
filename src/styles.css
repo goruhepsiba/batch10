@@ -1,0 +1,217 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* HeritageVerse — Luxury Heritage Editorial design system.
+ * Warm parchment + rich amber gold + deep velvet ink + gold accents.
+ * Typography: Cormorant Garamond (display) + Karla (body).
+ */
+
+@theme inline {
+  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-sans: "Karla", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-parchment: var(--parchment);
+  --color-amber: var(--amber);
+  --color-amber-deep: var(--amber-deep);
+
+  --shadow-elegant: 0 20px 40px -15px rgba(26, 18, 8, 0.15),
+                     0 0 50px -10px rgba(201, 146, 74, 0.08);
+  --shadow-soft: 0 8px 30px rgba(26, 18, 8, 0.05);
+
+  --gradient-amber: linear-gradient(135deg, #dfa85b, #ab722c);
+  --gradient-hero: linear-gradient(180deg,
+    rgba(26, 18, 8, 0.1) 0%,
+    rgba(26, 18, 8, 0.45) 50%,
+    rgba(26, 18, 8, 0.9) 100%);
+  --gradient-parchment: linear-gradient(180deg, #fbf7ef, #f6edd9);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Luxury Heritage Palette */
+  --ink: #1a1208;                /* deep ink */
+  --parchment: #f9f5eb;          /* cream parchment */
+  --amber: #c9924a;               /* warm gold */
+  --amber-deep: #a06e30;
+
+  --background: var(--parchment);
+  --foreground: var(--ink);
+
+  --card: #fdfbf7;
+  --card-foreground: var(--ink);
+  --popover: #fdfbf7;
+  --popover-foreground: var(--ink);
+
+  --primary: var(--amber-deep);
+  --primary-foreground: #fcf9f2;
+
+  --secondary: #f0e6cf;
+  --secondary-foreground: var(--ink);
+
+  --muted: #f3ebd8;
+  --muted-foreground: #6b5a45;
+
+  --accent: #e6d6b8;
+  --accent-foreground: var(--ink);
+
+  --destructive: #882222;
+  --destructive-foreground: #fcf9f2;
+
+  --border: rgba(201, 146, 74, 0.25);
+  --input: rgba(201, 146, 74, 0.3);
+  --ring: var(--amber);
+}
+
+.dark {
+  --ink: #f9f5eb;
+  --parchment: #120e0a;          /* very deep velvet obsidian */
+  --amber: #dfa85b;
+  --amber-deep: #c9924a;
+
+  --background: var(--parchment);
+  --foreground: var(--ink);
+
+  --card: #1b1610;               /* charcoal gold */
+  --card-foreground: var(--ink);
+  --popover: #1b1610;
+  --popover-foreground: var(--ink);
+
+  --primary: var(--amber);
+  --primary-foreground: #120e0a;
+
+  --secondary: #2c2217;
+  --secondary-foreground: var(--ink);
+
+  --muted: #271f15;
+  --muted-foreground: #af9c85;
+
+  --accent: #3d3121;
+  --accent-foreground: var(--ink);
+
+  --border: rgba(223, 168, 91, 0.2);
+  --input: rgba(223, 168, 91, 0.25);
+  --ring: var(--amber);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    /* Luxury grid overlay background */
+    background-image: 
+      radial-gradient(circle at 100% 150%, rgba(201, 146, 74, 0.04) 24%, transparent 24%),
+      radial-gradient(circle at 0% 0%, rgba(201, 146, 74, 0.03) 15%, transparent 15%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  .container-prose {
+    max-width: 1200px;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  /* Enhanced luxury glass design */
+  .glass-card {
+    background: color-mix(in oklab, var(--card) 85%, transparent);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(201, 146, 74, 0.25);
+    box-shadow: 0 8px 32px -4px rgba(26, 18, 8, 0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Adding subtle golden corners to cards for a premium museum/editorial feel */
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 6px;
+    height: 6px;
+    border-top: 1px solid var(--amber);
+    border-left: 1px solid var(--amber);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .glass-card::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    border-bottom: 1px solid var(--amber);
+    border-right: 1px solid var(--amber);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  /* Elegant Text Gradient */
+  .text-gradient-amber {
+    background: var(--gradient-amber);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Micro transitions and hover effects */
+  button, a {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hover-scale {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .hover-scale:hover {
+    transform: translateY(-4px) scale(1.01);
+  }
+}
