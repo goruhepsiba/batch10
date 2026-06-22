@@ -37,8 +37,11 @@ export default defineConfig({
   },
   nitro: {
     preset: nitroPreset,
+    externals: {
+      inline: ["tslib", "@clerk/tanstack-react-start", "@clerk/clerk-react", "@clerk/shared"]
+    }
   },
   ssr: {
-    noExternal: ["tslib"],
+    noExternal: ["tslib", "@clerk/tanstack-react-start", "@clerk/clerk-react", "@clerk/shared"],
   },
 } as any);
