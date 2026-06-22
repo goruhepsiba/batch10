@@ -1,5 +1,5 @@
 import { R as React } from "./react.mjs";
-import { a as ReactDOM } from "./react-dom.mjs";
+import { c as ReactDOM } from "./react-dom.mjs";
 function __insertCSS(code) {
   if (typeof document == "undefined") return;
   let head = document.head || document.getElementsByTagName("head")[0];

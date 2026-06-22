@@ -12,6 +12,7 @@ import "util";
 import "crypto";
 import "async_hooks";
 import "stream";
+import "../_libs/scheduler.mjs";
 import "../_libs/isbot.mjs";
 const SplitNotFoundComponent = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "container-prose py-24 text-center", children: [
   /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm uppercase tracking-[0.2em] text-amber", children: "404" }),

@@ -1,8 +1,29 @@
+function _mergeNamespaces(n, m) {
+  for (var i = 0; i < m.length; i++) {
+    const e = m[i];
+    if (typeof e !== "string" && !Array.isArray(e)) {
+      for (const k in e) {
+        if (k !== "default" && !(k in n)) {
+          const d = Object.getOwnPropertyDescriptor(e, k);
+          if (d) {
+            Object.defineProperty(n, k, d.get ? d : {
+              enumerable: true,
+              get: function() {
+                return e[k];
+              }
+            });
+          }
+        }
+      }
+    }
+  }
+  return Object.freeze(n);
+}
 var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
-var react = { exports: {} };
+var react$1 = { exports: {} };
 var react_production = {};
 var hasRequiredReact_production;
 function requireReact_production() {
@@ -430,16 +451,20 @@ function requireReact_production() {
 }
 var hasRequiredReact;
 function requireReact() {
-  if (hasRequiredReact) return react.exports;
+  if (hasRequiredReact) return react$1.exports;
   hasRequiredReact = 1;
   {
-    react.exports = requireReact_production();
+    react$1.exports = requireReact_production();
   }
-  return react.exports;
+  return react$1.exports;
 }
 var reactExports = requireReact();
 const React = /* @__PURE__ */ getDefaultExportFromCjs(reactExports);
-var jsxRuntime = { exports: {} };
+const react = /* @__PURE__ */ _mergeNamespaces({
+  __proto__: null,
+  default: React
+}, [reactExports]);
+var jsxRuntime$2 = { exports: {} };
 var reactJsxRuntime_production = {};
 var hasRequiredReactJsxRuntime_production;
 function requireReactJsxRuntime_production() {
@@ -471,18 +496,25 @@ function requireReactJsxRuntime_production() {
 }
 var hasRequiredJsxRuntime;
 function requireJsxRuntime() {
-  if (hasRequiredJsxRuntime) return jsxRuntime.exports;
+  if (hasRequiredJsxRuntime) return jsxRuntime$2.exports;
   hasRequiredJsxRuntime = 1;
   {
-    jsxRuntime.exports = requireReactJsxRuntime_production();
+    jsxRuntime$2.exports = requireReactJsxRuntime_production();
   }
-  return jsxRuntime.exports;
+  return jsxRuntime$2.exports;
 }
 var jsxRuntimeExports = requireJsxRuntime();
+const jsxRuntime = /* @__PURE__ */ getDefaultExportFromCjs(jsxRuntimeExports);
+const jsxRuntime$1 = /* @__PURE__ */ _mergeNamespaces({
+  __proto__: null,
+  default: jsxRuntime
+}, [jsxRuntimeExports]);
 export {
   React as R,
   requireReact as a,
-  commonjsGlobal as c,
+  jsxRuntime$1 as b,
+  react as c,
+  commonjsGlobal as d,
   getDefaultExportFromCjs as g,
   jsxRuntimeExports as j,
   reactExports as r
