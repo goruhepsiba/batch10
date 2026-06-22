@@ -213,6 +213,8 @@ function createMockSupabaseAdminClient() {
   return { from };
 }
 
+import ws from "ws";
+
 function createSupabaseAdminClient() {
   if (!isSupabaseAdminConfigured()) {
     console.warn(
@@ -240,6 +242,9 @@ function createSupabaseAdminClient() {
       persistSession: false,
       autoRefreshToken: false,
     },
+    realtime: {
+      transport: ws
+    }
   });
 }
 
