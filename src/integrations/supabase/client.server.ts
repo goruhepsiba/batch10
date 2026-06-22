@@ -213,6 +213,7 @@ function createMockSupabaseAdminClient() {
   return { from };
 }
 
+// @ts-ignore
 import ws from "ws";
 
 function createSupabaseAdminClient() {
