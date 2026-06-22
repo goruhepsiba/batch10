@@ -32,13 +32,23 @@ try {
 const nitroPreset = process.env.NITRO_PRESET || "vercel";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "tslib": "tslib/tslib.es6.js"
+    }
+  },
   tanstackStart: {
     server: { entry: "server" },
   },
   nitro: {
     preset: nitroPreset,
     externals: {
-      inline: ["tslib", "@clerk/tanstack-react-start", "@clerk/clerk-react", "@clerk/shared"]
+      traceInclude: [
+        "node_modules/tslib",
+        "node_modules/@clerk/tanstack-react-start",
+        "node_modules/@clerk/clerk-react",
+        "node_modules/@clerk/shared"
+      ]
     }
   },
   ssr: {
