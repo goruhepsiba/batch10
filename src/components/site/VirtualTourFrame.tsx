@@ -62,7 +62,11 @@ export function VirtualTourFrame({ title, lat, lng, query, mapEmbed }: VirtualTo
           </div>
 
           <a
-            href={mode === "street" ? links.streetOpen : `https://www.google.com/maps/search/?api=1&query=${buildSearch(query)}`}
+            href={
+              mode === "street"
+                ? links.streetOpen
+                : `https://www.google.com/maps/search/?api=1&query=${buildSearch(query)}`
+            }
             target="_blank"
             rel="noreferrer"
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-3 text-xs hover:bg-accent"

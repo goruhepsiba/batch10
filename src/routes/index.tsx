@@ -58,7 +58,8 @@ function Home() {
             AI-powered heritage tourism
           </p>
           <h1 className="mt-5 font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl text-parchment">
-            Walk through time.<br />
+            Walk through time.
+            <br />
             <span className="italic text-gradient-amber">Plan it in seconds.</span>
           </h1>
           <p className="mt-6 max-w-xl text-parchment/85 text-lg">
@@ -132,20 +133,38 @@ function Home() {
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-amber">Why HeritageVerse</p>
             <h2 className="font-display text-4xl md:text-5xl mt-2 leading-[1.05]">
-              A travel guide<br /><span className="italic">written for the curious.</span>
+              A travel guide
+              <br />
+              <span className="italic">written for the curious.</span>
             </h2>
             <p className="mt-5 text-muted-foreground max-w-md">
               Every destination is built like an editorial dossier — history, architecture,
-              timeline, hotels, weather, maps, and a 360° street view. Pair it with our AI
-              planner and you have a trip ready in minutes.
+              timeline, hotels, weather, maps, and a 360° street view. Pair it with our AI planner
+              and you have a trip ready in minutes.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { icon: Sparkles, title: "AI itineraries", body: "Tailored day-by-day plans with real places and food." },
-              { icon: Globe2, title: "Global heritage", body: "From Charminar to Angkor Wat — UNESCO and beyond." },
-              { icon: Map, title: "Maps & 360°", body: "Walk locations virtually before you arrive." },
-              { icon: Landmark, title: "Rich guides", body: "Architecture, timelines and cultural context." },
+              {
+                icon: Sparkles,
+                title: "AI itineraries",
+                body: "Tailored day-by-day plans with real places and food.",
+              },
+              {
+                icon: Globe2,
+                title: "Global heritage",
+                body: "From Charminar to Angkor Wat — UNESCO and beyond.",
+              },
+              {
+                icon: Map,
+                title: "Maps & 360°",
+                body: "Walk locations virtually before you arrive.",
+              },
+              {
+                icon: Landmark,
+                title: "Rich guides",
+                body: "Architecture, timelines and cultural context.",
+              },
             ].map(({ icon: Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-border/60 bg-card p-5">
                 <Icon className="h-5 w-5 text-amber" strokeWidth={1.7} />
@@ -165,7 +184,8 @@ function Home() {
         >
           <div className="max-w-2xl">
             <h2 className="font-display text-4xl md:text-5xl leading-[1.05]">
-              Tell us your dream trip.<br />
+              Tell us your dream trip.
+              <br />
               <span className="italic">We'll plan the rest.</span>
             </h2>
             <p className="mt-4 text-parchment/90">

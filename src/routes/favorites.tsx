@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, MapPin, Trash2, BookMarked, Calendar, Loader2 } from "lucide-react";
+import { Heart, MapPin, Trash2, BookMarked, Calendar, Loader2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { findDestination } from "@/lib/destinations";
+import { checkAuth } from "@/lib/auth.fns";
 
 interface Favorite {
   id: string;
@@ -28,6 +29,9 @@ interface SavedTrip {
 }
 
 export const Route = createFileRoute("/favorites")({
+  beforeLoad: async () => {
+    await checkAuth();
+  },
   head: () => ({
     meta: [
       { title: "My favorites · HeritageVerse" },
@@ -45,37 +49,45 @@ function FavoritesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) { navigate({ to: "/auth", replace: true }); return; }
+    if (authLoading || !user) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
       const [{ data: favs }, { data: tps }] = await Promise.all([
         supabase.from("favorites").select("*").order("created_at", { ascending: false }),
-        supabase.from("saved_trips").select("id,destination,days,budget,itinerary,created_at").order("created_at", { ascending: false }),
+        supabase
+          .from("saved_trips")
+          .select("id,destination,days,budget,itinerary,created_at")
+          .order("created_at", { ascending: false }),
       ]);
       if (cancelled) return;
       setFavorites((favs ?? []) as Favorite[]);
       setTrips((tps ?? []) as SavedTrip[]);
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [user, authLoading, navigate]);
 
   const removeFav = async (id: string) => {
     const prev = favorites;
     setFavorites(favorites.filter((f) => f.id !== id));
     const { error } = await supabase.from("favorites").delete().eq("id", id);
-    if (error) { setFavorites(prev); toast.error(error.message); }
-    else toast.success("Removed");
+    if (error) {
+      setFavorites(prev);
+      toast.error(error.message);
+    } else toast.success("Removed");
   };
 
   const removeTrip = async (id: string) => {
     const prev = trips;
     setTrips(trips.filter((t) => t.id !== id));
     const { error } = await supabase.from("saved_trips").delete().eq("id", id);
-    if (error) { setTrips(prev); toast.error(error.message); }
-    else toast.success("Trip removed");
+    if (error) {
+      setTrips(prev);
+      toast.error(error.message);
+    } else toast.success("Trip removed");
   };
 
   if (authLoading || !user) {
@@ -101,7 +113,9 @@ function FavoritesPage() {
           <p className="mt-4 text-muted-foreground">Loading…</p>
         ) : favorites.length === 0 ? (
           <div className="mt-5 rounded-2xl border border-border/60 bg-card p-8 text-center">
-            <p className="text-muted-foreground">No favorites yet. Tap the heart on any place to save it here.</p>
+            <p className="text-muted-foreground">
+              No favorites yet. Tap the heart on any place to save it here.
+            </p>
           </div>
         ) : (
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -111,19 +125,34 @@ function FavoritesPage() {
                 ? { to: "/destination/$slug" as const, params: { slug: f.ref } }
                 : {
                     to: "/place/$name" as const,
-                    params: { name: encodeURIComponent(f.name) },
-                    search: { lat: f.lat ?? 0, lng: f.lng ?? 0, country: f.country ?? "", admin: "" },
+                    params: { name: f.name },
+                    search: {
+                      lat: f.lat ?? 0,
+                      lng: f.lng ?? 0,
+                      country: f.country ?? "",
+                      admin: "",
+                    },
                   };
               return (
-                <div key={f.id} className="group relative rounded-2xl border border-border/60 bg-card overflow-hidden hover:shadow-soft transition">
+                <div
+                  key={f.id}
+                  className="group relative rounded-2xl border border-border/60 bg-card overflow-hidden hover:shadow-soft transition"
+                >
                   {curated && (
-                    <img src={curated.hero} alt={curated.name} className="h-32 w-full object-cover" />
+                    <img
+                      src={curated.hero}
+                      alt={curated.name}
+                      className="h-32 w-full object-cover"
+                    />
                   )}
                   <div className="p-5">
                     <Link {...href} className="block">
-                      <p className="font-display text-xl group-hover:text-amber transition">{f.name}</p>
+                      <p className="font-display text-xl group-hover:text-amber transition">
+                        {f.name}
+                      </p>
                       <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5" />{f.country ?? f.kind}
+                        <MapPin className="h-3.5 w-3.5" />
+                        {f.country ?? f.kind}
                       </p>
                     </Link>
                     <button
@@ -151,7 +180,10 @@ function FavoritesPage() {
           <div className="mt-5 rounded-2xl border border-border/60 bg-card p-8 text-center">
             <p className="text-muted-foreground">
               No saved itineraries yet. Generate one in the{" "}
-              <Link to="/planner" className="text-amber underline underline-offset-4">AI Planner</Link>.
+              <Link to="/planner" className="text-amber underline underline-offset-4">
+                AI Planner
+              </Link>
+              .
             </p>
           </div>
         ) : (
@@ -174,11 +206,22 @@ function FavoritesPage() {
                   </button>
                 </div>
                 {t.itinerary?.summary && (
-                  <p className="mt-3 text-sm text-foreground/80 line-clamp-4">{t.itinerary.summary}</p>
+                  <p className="mt-3 text-sm text-foreground/80 line-clamp-4">
+                    {t.itinerary.summary}
+                  </p>
                 )}
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Saved {new Date(t.created_at).toLocaleDateString()}
-                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Link
+                    to="/planner"
+                    search={{ tripId: t.id }}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber hover:underline underline-offset-4"
+                  >
+                    View full itinerary <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                  <span className="text-xs text-muted-foreground">
+                    Saved {new Date(t.created_at).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

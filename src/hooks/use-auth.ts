@@ -1,26 +1,54 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Session, User } from "@supabase/supabase-js";
+import { useEffect, useMemo } from "react";
+import { useAuth as useClerkAuth, useUser } from "@clerk/tanstack-react-start";
 
 export interface AuthState {
-  session: Session | null;
-  user: User | null;
+  session: { access_token: string; user: any } | null;
+  user: any | null;
   loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 export function useAuth(): AuthState {
-  const [state, setState] = useState<AuthState>({ session: null, user: null, loading: true });
+  const { isLoaded, userId, signOut } = useClerkAuth();
+  const { user } = useUser();
+
+  const mockUser = useMemo(() => {
+    if (!user) return null;
+    return {
+      id: user.id,
+      email: user.primaryEmailAddress?.emailAddress ?? "",
+      fullName: user.fullName ?? "",
+      imageUrl: user.imageUrl ?? "",
+      role: (user.publicMetadata?.role as string) ?? "tourist",
+      user_metadata: {
+        display_name:
+          user.fullName ||
+          user.username ||
+          user.primaryEmailAddress?.emailAddress?.split("@")[0] ||
+          "Traveler",
+      },
+    };
+  }, [user]);
+
+  const session = useMemo(() => {
+    if (!userId) return null;
+    return { access_token: "clerk-token", user: mockUser };
+  }, [userId, mockUser]);
 
   useEffect(() => {
-    // Subscribe FIRST, then fetch the current session.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setState({ session, user: session?.user ?? null, loading: false });
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      setState({ session: data.session, user: data.session?.user ?? null, loading: false });
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    if (typeof window !== "undefined") {
+      if (session) {
+        localStorage.setItem("supabase.auth.mock-session", JSON.stringify(session));
+      } else {
+        localStorage.removeItem("supabase.auth.mock-session");
+      }
+    }
+  }, [session]);
 
-  return state;
+  return {
+    session,
+    user: mockUser,
+    loading: !isLoaded,
+    signOut,
+  };
 }

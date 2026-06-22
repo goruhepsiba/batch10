@@ -25,7 +25,12 @@ async function fromOpenMeteo(query: string, count: number): Promise<GeoResult[]>
 async function fromNominatim(query: string, count: number): Promise<GeoResult[]> {
   try {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=${count}&accept-language=en`;
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    const res = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "HeritageVerse/1.0 (heritage travel app; contact@heritageverse.app)",
+      },
+    });
     if (!res.ok) return [];
     const data = (await res.json()) as Array<{
       place_id: number;
@@ -33,7 +38,15 @@ async function fromNominatim(query: string, count: number): Promise<GeoResult[]>
       lon: string;
       display_name: string;
       name?: string;
-      address?: { country?: string; country_code?: string; state?: string; city?: string; town?: string; village?: string; suburb?: string };
+      address?: {
+        country?: string;
+        country_code?: string;
+        state?: string;
+        city?: string;
+        town?: string;
+        village?: string;
+        suburb?: string;
+      };
       type?: string;
       class?: string;
     }>;
@@ -41,7 +54,10 @@ async function fromNominatim(query: string, count: number): Promise<GeoResult[]>
       const addr = r.address ?? {};
       const niceName =
         r.name ||
-        addr.city || addr.town || addr.village || addr.suburb ||
+        addr.city ||
+        addr.town ||
+        addr.village ||
+        addr.suburb ||
         r.display_name.split(",")[0] ||
         query;
       return {

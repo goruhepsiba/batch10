@@ -7,7 +7,7 @@ export function DestinationCard({ d, eager = false }: { d: Destination; eager?: 
     <Link
       to="/destination/$slug"
       params={{ slug: d.slug }}
-      className="group block overflow-hidden rounded-2xl bg-card shadow-soft border border-border/60 hover:shadow-elegant transition-all duration-500 hover:-translate-y-1"
+      className="group block overflow-hidden rounded-2xl glass-card hover:shadow-elegant transition-all duration-500 hover:-translate-y-1.5"
     >
       <div className="aspect-[4/3] overflow-hidden bg-muted">
         <img

@@ -43,15 +43,17 @@
   --color-amber: var(--amber);
   --color-amber-deep: var(--amber-deep);
 
-  --shadow-elegant: 0 20px 40px -15px rgba(26, 18, 8, 0.15),
-                     0 0 50px -10px rgba(201, 146, 74, 0.08);
+  --shadow-elegant:
+    0 20px 40px -15px rgba(26, 18, 8, 0.15), 0 0 50px -10px rgba(201, 146, 74, 0.08);
   --shadow-soft: 0 8px 30px rgba(26, 18, 8, 0.05);
 
   --gradient-amber: linear-gradient(135deg, #dfa85b, #ab722c);
-  --gradient-hero: linear-gradient(180deg,
+  --gradient-hero: linear-gradient(
+    180deg,
     rgba(26, 18, 8, 0.1) 0%,
     rgba(26, 18, 8, 0.45) 50%,
-    rgba(26, 18, 8, 0.9) 100%);
+    rgba(26, 18, 8, 0.9) 100%
+  );
   --gradient-parchment: linear-gradient(180deg, #fbf7ef, #f6edd9);
 }
 
@@ -59,9 +61,9 @@
   --radius: 0.75rem;
 
   /* Luxury Heritage Palette */
-  --ink: #1a1208;                /* deep ink */
-  --parchment: #f9f5eb;          /* cream parchment */
-  --amber: #c9924a;               /* warm gold */
+  --ink: #1a1208; /* deep ink */
+  --parchment: #f9f5eb; /* cream parchment */
+  --amber: #c9924a; /* warm gold */
   --amber-deep: #a06e30;
 
   --background: var(--parchment);
@@ -94,14 +96,14 @@
 
 .dark {
   --ink: #f9f5eb;
-  --parchment: #120e0a;          /* very deep velvet obsidian */
+  --parchment: #120e0a; /* very deep velvet obsidian */
   --amber: #dfa85b;
   --amber-deep: #c9924a;
 
   --background: var(--parchment);
   --foreground: var(--ink);
 
-  --card: #1b1610;               /* charcoal gold */
+  --card: #1b1610; /* charcoal gold */
   --card-foreground: var(--ink);
   --popover: #1b1610;
   --popover-foreground: var(--ink);
@@ -138,13 +140,17 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     /* Luxury grid overlay background */
-    background-image: 
+    background-image:
       radial-gradient(circle at 100% 150%, rgba(201, 146, 74, 0.04) 24%, transparent 24%),
       radial-gradient(circle at 0% 0%, rgba(201, 146, 74, 0.03) 15%, transparent 15%);
     background-attachment: fixed;
   }
 
-  h1, h2, h3, h4, .font-display {
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
     font-family: var(--font-display);
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -170,7 +176,7 @@
 
   /* Adding subtle golden corners to cards for a premium museum/editorial feel */
   .glass-card::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 4px;
     left: 4px;
@@ -180,10 +186,11 @@
     border-left: 1px solid var(--amber);
     opacity: 0.7;
     pointer-events: none;
+    z-index: 10;
   }
 
   .glass-card::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 4px;
     right: 4px;
@@ -193,6 +200,7 @@
     border-right: 1px solid var(--amber);
     opacity: 0.7;
     pointer-events: none;
+    z-index: 10;
   }
 
   /* Elegant Text Gradient */
@@ -204,7 +212,8 @@
   }
 
   /* Micro transitions and hover effects */
-  button, a {
+  button,
+  a {
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 

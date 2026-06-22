@@ -9,12 +9,14 @@ This document provides a comprehensive technical breakdown of **HeritageVerse**,
 HeritageVerse is a full-stack web application designed to bring global heritage sites to life. It features editorial-grade guides, dynamic AI-generated landmark profiles, interactive itinerary planners, custom user reviews, and 360° virtual tours.
 
 ### Frontend & Core Shell
+
 - **React 19 & Vite**: Modern rendering framework and high-speed build bundler.
 - **TanStack Router**: Type-safe routing engine that parses and loads parameters dynamically.
 - **TailwindCSS**: Utility styling layer augmented by custom global museum-grade styles.
 - **Lucide React**: Vector icon sets for clean visual design.
 
 ### Backend, Database & Server Functions
+
 - **TanStack Start & Nitro Server**: A server engine built on top of Vite and Nitro, allowing client files to invoke secure, server-side functions (`createServerFn`).
 - **Supabase**: Real-time database, file storage, and token authentication manager.
 - **PostgreSQL**: The relational engine driving Supabase.
@@ -74,6 +76,7 @@ globe-treks-genius-main/
 ## 3. Detailed Explanation of Project Flow
 
 ### A. Search & Autocomplete Flow
+
 1. The user focuses the `SearchBar` input.
 2. If empty, the dropdown suggests **Popular Destinations** and **Recent Searches** (loaded from `localStorage` and synced with Supabase `search_history`).
 3. As the user types, a debounced handler filters the local curated destinations (fuzzy match) and simultaneously queries the `geocodePlace` API.
@@ -81,7 +84,9 @@ globe-treks-genius-main/
 5. Pressing **Enter** navigates to `/search?q=query`. Clicking a suggestion navigates directly to `/destination/$slug` or `/place/$name`.
 
 ### B. Place Details Compilation Flow (The 19 Points)
+
 When a user opens `/place/$name` (such as "India Gate") or `/destination/$slug`:
+
 1. If the coordinates are missing from the URL, the page's parallel geocoder queries coordinates dynamically.
 2. The page calls the backend server function `describePlace` to generate details.
 3. **Provider Fallback Engine**:
@@ -89,7 +94,7 @@ When a user opens `/place/$name` (such as "India Gate") or `/destination/$slug`:
    - If missing/exhausted, it tries the **Lovable AI Gateway**.
    - If that fails, it tries **Groq API** (`llama-3.3-70b-specdec`).
    - If that fails, it tries **OpenRouter API** (`gemini-2.5-flash`).
-   - If *all* API credentials fail or are out of quota, it intercepts the error and returns a **high-fidelity static mock profile** (specialized for "Birla Mandir", or dynamically formatted for other places).
+   - If _all_ API credentials fail or are out of quota, it intercepts the error and returns a **high-fidelity static mock profile** (specialized for "Birla Mandir", or dynamically formatted for other places).
 4. The page compiles and renders the 19 points:
    - **Overview, History Timeline, Cultural Significance, Architecture**: Rich text panels.
    - **Opening Hours, Entry Fees, Weather, Map**: Rendered in the sticky sidebar.
@@ -100,11 +105,13 @@ When a user opens `/place/$name` (such as "India Gate") or `/destination/$slug`:
    - **AI-generated Travel Insights**: Specialized key highlights.
 
 ### C. Authentication Flow
+
 1. Users visit `/auth` to sign in or create an account.
 2. Form fields are validated client-side with **Zod** schema constraints (requiring secure password rules).
 3. **Google Auth Bypass**: Clicking "Continue with Google" checks your Supabase project's settings. If Google OAuth is not configured in the Supabase dashboard (common during local hackathons/college runs), it automatically logs the user into a pre-registered **Demo Traveler** account (`demo.traveler@heritageverse.com`), ensuring a smooth presentation.
 
 ### D. AI Itinerary Planner Flow
+
 1. The user inputs their destination, budget, style, and travel interests.
 2. The form sends the data to the server-side `generateItinerary` function.
 3. The prompt instructs the AI to sequence places geographically (to minimize travel time) and to format descriptions in short, concise sentences (5-7 lines max).

@@ -29,22 +29,35 @@ function SearchPage() {
   const [geoLoading, setGeoLoading] = useState(false);
 
   useEffect(() => {
-    if (!q.trim()) { setGeo([]); return; }
+    if (!q.trim()) {
+      setGeo([]);
+      return;
+    }
     let cancelled = false;
     setGeoLoading(true);
     geocodePlace(q, 8)
-      .then((r) => { if (!cancelled) setGeo(r); })
-      .finally(() => { if (!cancelled) setGeoLoading(false); });
-    return () => { cancelled = true; };
+      .then((r) => {
+        if (!cancelled) setGeo(r);
+      })
+      .finally(() => {
+        if (!cancelled) setGeoLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [q]);
-
-  const showCurated = q.trim() ? curated : curated;
 
   return (
     <section className="container-prose pt-12 pb-20">
       <p className="text-xs uppercase tracking-[0.24em] text-amber">Search</p>
       <h1 className="font-display text-4xl md:text-5xl mt-2">
-        {q ? <>Results for <span className="italic">"{q}"</span></> : "Explore every destination"}
+        {q ? (
+          <>
+            Results for <span className="italic">"{q}"</span>
+          </>
+        ) : (
+          "Explore every destination"
+        )}
       </h1>
 
       <div className="mt-8 max-w-2xl">
@@ -52,14 +65,20 @@ function SearchPage() {
       </div>
 
       {/* Curated */}
-      {showCurated.length > 0 && (
+      {curated.length > 0 && (
         <div className="mt-12">
           <div className="flex items-center justify-between">
             <p className="text-xs uppercase tracking-[0.24em] text-amber">Curated heritage sites</p>
-            <p className="text-xs text-muted-foreground">{showCurated.length} hand-picked</p>
+            <p className="text-xs text-muted-foreground">
+              {q.trim()
+                ? `${curated.length} match${curated.length === 1 ? "" : "es"}`
+                : `${curated.length} hand-picked`}
+            </p>
           </div>
           <div className="mt-5 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {showCurated.map((d) => <DestinationCard key={d.slug} d={d} />)}
+            {curated.map((d) => (
+              <DestinationCard key={d.slug} d={d} />
+            ))}
           </div>
         </div>
       )}
@@ -81,7 +100,9 @@ function SearchPage() {
           {!geoLoading && geo.length === 0 && (
             <div className="mt-8 rounded-2xl border border-border/60 bg-card p-8 text-center">
               <p className="font-display text-xl">No worldwide match found.</p>
-              <p className="text-muted-foreground text-sm mt-1">Try a different spelling or a broader name.</p>
+              <p className="text-muted-foreground text-sm mt-1">
+                Try a different spelling or a broader name.
+              </p>
             </div>
           )}
 
@@ -91,11 +112,18 @@ function SearchPage() {
                 <Link
                   key={g.id}
                   to="/place/$name"
-                  params={{ name: encodeURIComponent(g.name) }}
-                  search={{ lat: g.latitude, lng: g.longitude, country: g.country, admin: g.admin1 ?? "" }}
-                  className="group rounded-2xl border border-border/60 bg-card p-5 hover:shadow-soft hover:border-amber/40 transition"
+                  params={{ name: g.name }}
+                  search={{
+                    lat: g.latitude,
+                    lng: g.longitude,
+                    country: g.country,
+                    admin: g.admin1 ?? "",
+                  }}
+                  className="group rounded-2xl glass-card p-5 hover:shadow-elegant transition-all duration-500 hover:-translate-y-1"
                 >
-                  <p className="font-display text-2xl leading-tight group-hover:text-amber transition">{g.name}</p>
+                  <p className="font-display text-2xl leading-tight group-hover:text-amber transition">
+                    {g.name}
+                  </p>
                   <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5" />
                     {[g.admin1, g.country].filter(Boolean).join(", ")}

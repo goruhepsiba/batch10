@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ClerkProvider } from "@clerk/tanstack-react-start";
 import {
   Outlet,
   Link,
@@ -7,12 +8,16 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
+import { useUser } from "@clerk/tanstack-react-start";
+import { validateEnv } from "@/lib/env";
+import { syncUserSession } from "@/lib/auth.fns";
 
 import appCss from "../styles.css?url";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { Toaster } from "@/components/ui/sonner";
+import { ChatbotWidget } from "@/components/site/ChatbotWidget";
 
 function NotFoundComponent() {
   return (
@@ -67,6 +72,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: () => {
+    validateEnv();
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -126,18 +134,36 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function AuthSyncer() {
+  const { isLoaded, isSignedIn } = useUser();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      syncUserSession().catch((err) => {
+        console.error("Failed to auto-sync user with database:", err);
+      });
+    }
+  }, [isLoaded, isSignedIn]);
+
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <Footer />
-        <Toaster />
-      </div>
+      <ClerkProvider>
+        <AuthSyncer />
+        <div className="flex min-h-screen flex-col">
+          <Header />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <Footer />
+          <Toaster />
+          <ChatbotWidget />
+        </div>
+      </ClerkProvider>
     </QueryClientProvider>
   );
 }

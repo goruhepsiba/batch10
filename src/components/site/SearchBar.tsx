@@ -3,7 +3,7 @@ import { Search, Clock, Sparkles, MapPin, X, ArrowUpRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { destinations } from "@/lib/destinations";
 import { geocodePlace, type GeoResult } from "@/lib/geocode";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
 export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
@@ -34,7 +34,7 @@ export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
   const saveSearchToHistory = async (query: string) => {
     const trimmed = query.trim();
     if (!trimmed) return;
-    
+
     // Update local history
     const filtered = history.filter((h) => h.toLowerCase() !== trimmed.toLowerCase());
     const updated = [trimmed, ...filtered].slice(0, 5);
@@ -42,13 +42,15 @@ export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
     localStorage.setItem("search_history", JSON.stringify(updated));
 
     // Optional: save to Supabase search_history table
-    try {
-      await supabase.from("search_history").insert({
-        user_id: user?.id || null,
-        query: trimmed,
-      });
-    } catch (e) {
-      console.warn("Could not sync search history to database:", e);
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from("search_history").insert({
+          user_id: user?.id || null,
+          query: trimmed,
+        });
+      } catch (e) {
+        console.warn("Could not sync search history to database:", e);
+      }
     }
   };
 
@@ -74,11 +76,15 @@ export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
 
     // 1. Curated suggestions (Fuzzy match)
     const matchSingular = trimmed.endsWith("s") ? trimmed.slice(0, -1) : trimmed;
-    const curatedMatches = destinations.filter((d) =>
-      [d.name, d.city, d.country, d.category].some((f) =>
-        f.toLowerCase().includes(trimmed.toLowerCase()) || f.toLowerCase().includes(matchSingular.toLowerCase())
+    const curatedMatches = destinations
+      .filter((d) =>
+        [d.name, d.city, d.country, d.category].some(
+          (f) =>
+            f.toLowerCase().includes(trimmed.toLowerCase()) ||
+            f.toLowerCase().includes(matchSingular.toLowerCase()),
+        ),
       )
-    ).slice(0, 3);
+      .slice(0, 3);
     setSuggestions(curatedMatches);
 
     // 2. Geocoding autocomplete (with 400ms debounce)
@@ -162,15 +168,22 @@ export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
       {isOpen && (
         <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-card border border-border/70 rounded-2xl shadow-elegant z-50 overflow-hidden animate-in fade-in-50 slide-in-from-top-2 duration-150">
           <div className="p-4 space-y-4 max-h-[420px] overflow-y-auto">
-            
             {/* If query is empty: Show history & popular */}
             {!q.trim() && (
               <>
                 {history.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                      <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> Recent Searches</span>
-                      <button type="button" onClick={clearHistory} className="hover:text-amber transition-colors">Clear</button>
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-3 w-3" /> Recent Searches
+                      </span>
+                      <button
+                        type="button"
+                        onClick={clearHistory}
+                        className="hover:text-amber transition-colors"
+                      >
+                        Clear
+                      </button>
                     </div>
                     <div className="space-y-1">
                       {history.map((h, i) => (
@@ -183,7 +196,9 @@ export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
                           }}
                           className="flex items-center justify-between w-full text-left text-sm text-foreground/90 py-2 px-3 rounded-lg hover:bg-accent/40 transition-colors"
                         >
-                          <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-muted-foreground/80" /> {h}</span>
+                          <span className="flex items-center gap-2">
+                            <Clock className="h-3.5 w-3.5 text-muted-foreground/80" /> {h}
+                          </span>
                           <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 text-muted-foreground" />
                         </button>
                       ))}
@@ -236,9 +251,13 @@ export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
                         >
                           <div>
                             <p className="text-sm font-medium text-foreground">{d.name}</p>
-                            <p className="text-xs text-muted-foreground">{d.city}, {d.country}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {d.city}, {d.country}
+                            </p>
                           </div>
-                          <span className="text-xs font-medium text-amber uppercase tracking-wider">{d.category}</span>
+                          <span className="text-xs font-medium text-amber uppercase tracking-wider">
+                            {d.category}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -251,7 +270,9 @@ export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
                   </p>
                   <div className="space-y-1">
                     {loading && geoSuggestions.length === 0 && (
-                      <p className="text-xs text-muted-foreground px-3 py-2 animate-pulse">Searching global registry…</p>
+                      <p className="text-xs text-muted-foreground px-3 py-2 animate-pulse">
+                        Searching global registry…
+                      </p>
                     )}
                     {geoSuggestions.map((g) => (
                       <button
@@ -262,8 +283,13 @@ export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
                           setIsOpen(false);
                           navigate({
                             to: "/place/$name",
-                            params: { name: encodeURIComponent(g.name) },
-                            search: { lat: g.latitude, lng: g.longitude, country: g.country, admin: g.admin1 ?? "" },
+                            params: { name: g.name },
+                            search: {
+                              lat: g.latitude,
+                              lng: g.longitude,
+                              country: g.country,
+                              admin: g.admin1 ?? "",
+                            },
                           });
                         }}
                         className="flex items-center justify-between w-full text-left py-2 px-3 rounded-lg hover:bg-accent/40 transition"
@@ -278,13 +304,14 @@ export function SearchBar({ size = "lg" }: { size?: "lg" | "md" }) {
                       </button>
                     ))}
                     {!loading && geoSuggestions.length === 0 && (
-                      <p className="text-xs text-muted-foreground px-3 py-2">No other locations found. Press enter to search.</p>
+                      <p className="text-xs text-muted-foreground px-3 py-2">
+                        No other locations found. Press enter to search.
+                      </p>
                     )}
                   </div>
                 </div>
               </>
             )}
-
           </div>
         </div>
       )}

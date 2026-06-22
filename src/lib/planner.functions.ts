@@ -14,7 +14,7 @@ export type PlannerInput = z.infer<typeof Input>;
 export interface Itinerary {
   destination: string;
   summary: string;
-  estimatedCostUSD: { low: number; high: number };
+  estimatedCostINR: { low: number; high: number };
   bestTime: string;
   days: Array<{
     day: number;
@@ -23,7 +23,7 @@ export interface Itinerary {
     afternoon: string;
     evening: string;
     food: string;
-    estimatedCostUSD: number;
+    estimatedCostINR: number;
   }>;
   tips: string[];
 }
@@ -31,30 +31,102 @@ export interface Itinerary {
 export const generateItinerary = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }): Promise<Itinerary> => {
-    const sys = `You are a meticulous heritage-travel concierge. Produce a realistic, culturally rich itinerary focused on heritage, history and authentic local experiences. Respond with ONLY valid JSON matching the provided schema — no markdown, no commentary.`;
+    const sys = `You are a meticulous heritage-travel concierge specializing in Indian and South Asian destinations. Produce a realistic, culturally rich itinerary focused on heritage, history and authentic local experiences. ALL costs must be in Indian Rupees (INR/₹) and must be realistic for the Indian market. Respond with ONLY valid JSON matching the provided schema — no markdown, no commentary.`;
 
     const user = `Plan a ${data.days}-day trip to ${data.destination}.
-Budget level: ${data.budget}.
+Budget level: ${data.budget} (budget = ₹1500-3000/day, mid = ₹3000-8000/day, luxury = ₹8000-20000/day).
 Travel style: ${data.style}.
 Interests: ${data.interests.join(", ")}.
 
 Return JSON with this exact shape:
 {
   "destination": string,
-  "summary": string (1 short sentence),
-  "estimatedCostUSD": { "low": number, "high": number },
+  "summary": string (1 engaging summary sentence, max 20 words),
+  "estimatedCostINR": { "low": number, "high": number },
   "bestTime": string,
   "days": [
-    { "day": number, "theme": string, "morning": string (1 short sentence, max 10 words), "afternoon": string (1 short sentence, max 10 words), "evening": string (1 short sentence, max 10 words), "food": string (1-2 words), "estimatedCostUSD": number }
+    { 
+      "day": number, 
+      "theme": string, 
+      "morning": string (1-2 sentences describing the activity; 15-20 words max), 
+      "afternoon": string (1-2 sentences describing the activity; 15-20 words max), 
+      "evening": string (1-2 sentences describing the activity; 15-20 words max), 
+      "food": string (recommend a local dish; max 8 words), 
+      "estimatedCostINR": number (realistic daily cost in Indian Rupees)
+    }
   ],
-  "tips": [string, string]
+  "tips": [string, string, string]
 }
-Generate exactly ${data.days} days. Keep all text descriptions extremely short, concise, and minimal (max 10 words per activity/time slot) so that the entire output remains very compact.`;
+Generate exactly ${data.days} days. All costs MUST be in Indian Rupees (₹). Keep all activity descriptions short but high quality and informative (15-20 words max per time slot).`;
 
     const errors: string[] = [];
 
-    // 1. Try Gemini API directly
-    const geminiKey = process.env.GEMINI_API_KEY || (process.env.AI_API_KEY?.startsWith("AIzaSy") ? process.env.AI_API_KEY : undefined);
+    // 1. Try OpenRouter first (primary provider)
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+    if (openrouterKey) {
+      try {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${openrouterKey}`,
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              { role: "system", content: sys },
+              { role: "user", content: user },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+        if (res.ok) {
+          const payload = await res.json();
+          const content = payload?.choices?.[0]?.message?.content ?? "";
+          if (content) return normalizeItinerary(parseAIResult(content));
+        } else {
+          errors.push(`OpenRouter API error: ${res.status}`);
+        }
+      } catch (err: any) {
+        errors.push(`OpenRouter exception: ${err.message}`);
+      }
+    }
+
+    // 2. Try Groq API
+    const groqKey = process.env.GROQ_API_KEY;
+    if (groqKey) {
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${groqKey}`,
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              { role: "system", content: sys },
+              { role: "user", content: user },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+        if (res.ok) {
+          const payload = await res.json();
+          const content = payload?.choices?.[0]?.message?.content ?? "";
+          if (content) return normalizeItinerary(parseAIResult(content));
+        } else {
+          errors.push(`Groq API error: ${res.status}`);
+        }
+      } catch (err: any) {
+        errors.push(`Groq API exception: ${err.message}`);
+      }
+    }
+
+    // 3. Try Gemini API directly
+    const geminiKey =
+      process.env.GEMINI_API_KEY?.startsWith("AIzaSy") ? process.env.GEMINI_API_KEY :
+      (process.env.AI_API_KEY?.startsWith("AIzaSy") ? process.env.AI_API_KEY : undefined);
     if (geminiKey) {
       try {
         const res = await fetch(
@@ -67,12 +139,12 @@ Generate exactly ${data.days} days. Keep all text descriptions extremely short, 
               systemInstruction: { parts: [{ text: sys }] },
               generationConfig: { responseMimeType: "application/json" },
             }),
-          }
+          },
         );
         if (res.ok) {
           const payload = await res.json();
           const content = payload?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-          if (content) return parseAIResult(content);
+          if (content) return normalizeItinerary(parseAIResult(content));
         } else {
           errors.push(`Gemini direct error: ${res.status}`);
         }
@@ -81,7 +153,7 @@ Generate exactly ${data.days} days. Keep all text descriptions extremely short, 
       }
     }
 
-    // 2. Try Lovable AI Gateway
+    // 4. Try Lovable AI Gateway
     const lovableKey = process.env.AI_API_KEY || process.env.LOVABLE_API_KEY;
     if (lovableKey && !lovableKey.startsWith("AIzaSy")) {
       try {
@@ -104,7 +176,7 @@ Generate exactly ${data.days} days. Keep all text descriptions extremely short, 
         if (res.ok) {
           const payload = await res.json();
           const content = payload?.choices?.[0]?.message?.content ?? "";
-          if (content) return parseAIResult(content);
+          if (content) return normalizeItinerary(parseAIResult(content));
         } else {
           errors.push(`Lovable gateway error: ${res.status}`);
         }
@@ -113,90 +185,64 @@ Generate exactly ${data.days} days. Keep all text descriptions extremely short, 
       }
     }
 
-    // 3. Try Groq API
-    const groqKey = process.env.GROQ_API_KEY;
-    if (groqKey) {
-      try {
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${groqKey}`,
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: [
-              { role: "system", content: sys },
-              { role: "user", content: user },
-            ],
-            response_format: { type: "json_object" },
-          }),
-        });
-        if (res.ok) {
-          const payload = await res.json();
-          const content = payload?.choices?.[0]?.message?.content ?? "";
-          if (content) return parseAIResult(content);
-        } else {
-          errors.push(`Groq API error: ${res.status}`);
-        }
-      } catch (err: any) {
-        errors.push(`Groq API exception: ${err.message}`);
-      }
-    }
-
-    // 4. Try OpenRouter
-    const openrouterKey = process.env.OPENROUTER_API_KEY;
-    if (openrouterKey) {
-      try {
-        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${openrouterKey}`,
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [
-              { role: "system", content: sys },
-              { role: "user", content: user },
-            ],
-            response_format: { type: "json_object" },
-          }),
-        });
-        if (res.ok) {
-          const payload = await res.json();
-          const content = payload?.choices?.[0]?.message?.content ?? "";
-          if (content) return parseAIResult(content);
-        } else {
-          errors.push(`OpenRouter API error: ${res.status}`);
-        }
-      } catch (err: any) {
-        errors.push(`OpenRouter exception: ${err.message}`);
-      }
-    }
-
     // fallback to static mock content for local college projects
     console.warn("All AI providers failed. Falling back to local database...", errors);
     return getFallbackItinerary(data.destination, data.days, data.budget);
   });
 
-function parseAIResult(content: string): Itinerary {
+function parseAIResult(content: string): any {
   try {
-    return JSON.parse(content) as Itinerary;
+    return JSON.parse(content);
   } catch {
     const cleaned = content.replace(/```json\s*|\s*```/g, "").trim();
-    return JSON.parse(cleaned) as Itinerary;
+    return JSON.parse(cleaned);
   }
 }
 
+/**
+ * Normalizes AI response to ensure INR fields exist.
+ * If the AI returned USD fields, convert them to INR (1 USD ≈ 85 INR).
+ */
+function normalizeItinerary(raw: any): Itinerary {
+  const USD_TO_INR = 85;
+
+  // Handle case where AI returned USD fields instead of INR
+  const estimatedCostINR = raw.estimatedCostINR ?? {
+    low: (raw.estimatedCostUSD?.low ?? 200) * USD_TO_INR,
+    high: (raw.estimatedCostUSD?.high ?? 600) * USD_TO_INR,
+  };
+
+  const days = (raw.days ?? []).map((d: any) => ({
+    day: d.day,
+    theme: d.theme,
+    morning: d.morning,
+    afternoon: d.afternoon,
+    evening: d.evening,
+    food: d.food,
+    estimatedCostINR: d.estimatedCostINR ?? (d.estimatedCostUSD ?? 50) * USD_TO_INR,
+  }));
+
+  return {
+    destination: raw.destination,
+    summary: raw.summary,
+    estimatedCostINR,
+    bestTime: raw.bestTime,
+    days,
+    tips: raw.tips ?? [],
+  };
+}
+
 function getFallbackItinerary(destination: string, days: number, budget: string): Itinerary {
-  const isHyderabad = destination.toLowerCase().includes("hyderabad") || destination.toLowerCase().includes("birla");
-  
+  const isHyderabad =
+    destination.toLowerCase().includes("hyderabad") || destination.toLowerCase().includes("birla");
+
+  const costPerDay = budget === "budget" ? 2000 : budget === "mid" ? 5000 : 12000;
+
   if (isHyderabad) {
     return {
       destination: "Hyderabad Heritage Tour",
       summary: "Explore the historic palaces, forts, and temple architectures of the Nizam's city.",
-      estimatedCostUSD: { low: 150, high: 450 },
+      estimatedCostINR: { low: costPerDay * days * 0.8, high: costPerDay * days * 1.3 },
       bestTime: "October – March",
       days: Array.from({ length: days }, (_, idx) => {
         const dayNum = idx + 1;
@@ -205,38 +251,38 @@ function getFallbackItinerary(destination: string, days: number, budget: string)
             day: 1,
             theme: "The Old City & Charminar",
             morning: "Visit the iconic Charminar and pray at Mecca Masjid.",
-            afternoon: "Walk through Laad Bazaar and have Biryani.",
-            evening: "Explore Chowmahalla Palace's clock tower.",
-            food: "Hyderabadi Biryani.",
-            estimatedCostUSD: 40
+            afternoon: "Walk through Laad Bazaar and have Biryani at Paradise.",
+            evening: "Explore Chowmahalla Palace's clock tower and courtyards.",
+            food: "Hyderabadi Dum Biryani at Paradise.",
+            estimatedCostINR: costPerDay,
           };
         }
         if (dayNum === 2) {
           return {
             day: 2,
             theme: "Fortresses & Sunset Vistas",
-            morning: "Visit Golconda Fort and experience acoustic clapping.",
-            afternoon: "Explore Qutb Shahi Tombs adjacent to the fort.",
-            evening: "Take a sunset boat ride on Hussain Sagar Lake.",
-            food: "Irani Chai and Osmania Biscuits.",
-            estimatedCostUSD: 50
+            morning: "Visit Golconda Fort and experience the famous acoustic clapping dome.",
+            afternoon: "Explore the serene Qutb Shahi Tombs adjacent to the fort.",
+            evening: "Take a sunset boat ride on Hussain Sagar Lake near Tank Bund.",
+            food: "Irani Chai and Osmania Biscuits at Nimrah Café.",
+            estimatedCostINR: costPerDay,
           };
         }
         return {
           day: dayNum,
           theme: `Day ${dayNum}: Museum & Modern Heritage`,
-          morning: "Visit the Salar Jung Museum collection.",
-          afternoon: "Lunch at Jewel of Nizams, shop pearls.",
-          evening: "Relax at NTR Gardens and watch laser show.",
-          food: "Qubani Ka Meetha dessert.",
-          estimatedCostUSD: 60
+          morning: "Visit the Salar Jung Museum's vast antiques collection.",
+          afternoon: "Lunch at Jewel of Nizams restaurant, shop for Hyderabadi pearls.",
+          evening: "Relax at NTR Gardens and watch the Lumbini Park laser show.",
+          food: "Qubani Ka Meetha and Haleem.",
+          estimatedCostINR: costPerDay,
         };
       }),
       tips: [
-        "Travel via local auto-rickshaw.",
-        "Buy pearls only from certified outlets.",
-        "Try Irani Chai near Charminar."
-      ]
+        "Travel via local auto-rickshaw — negotiate ₹30-80 per ride.",
+        "Buy pearls only from certified outlets in Laad Bazaar.",
+        "Try Irani Chai at Nimrah Café near Charminar for ₹25.",
+      ],
     };
   }
 
@@ -244,21 +290,21 @@ function getFallbackItinerary(destination: string, days: number, budget: string)
   return {
     destination: destination,
     summary: `A carefully designed ${days}-day plan to experience the best heritage landmarks of ${destination}.`,
-    estimatedCostUSD: { low: 200, high: 600 },
+    estimatedCostINR: { low: costPerDay * days * 0.8, high: costPerDay * days * 1.3 },
     bestTime: "Year-round",
     days: Array.from({ length: days }, (_, idx) => ({
       day: idx + 1,
       theme: `Day ${idx + 1}: Discover Historic Landmarks`,
-      morning: `Explore central monument and museum.`,
-      afternoon: `Lunch at heritage cafe, stroll gardens.`,
-      evening: `Visit old market and local sunset spot.`,
-      food: `Sample traditional dishes.`,
-      estimatedCostUSD: 50
+      morning: `Explore central monument, museum and heritage quarter.`,
+      afternoon: `Lunch at a heritage café, stroll through local gardens.`,
+      evening: `Visit old market bazaar and enjoy a local sunset viewpoint.`,
+      food: `Sample traditional regional dishes.`,
+      estimatedCostINR: costPerDay,
     })),
     tips: [
-      "Carry cash for entry fees.",
-      "Stay hydrated and wear walking shoes.",
-      "Start early to beat the crowds."
-    ]
+      "Carry cash for entry fees at heritage monuments.",
+      "Stay hydrated and wear comfortable walking shoes.",
+      "Start early morning to beat the crowds at popular sites.",
+    ],
   };
 }
